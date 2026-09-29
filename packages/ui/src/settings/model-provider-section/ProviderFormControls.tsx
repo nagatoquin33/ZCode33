@@ -314,6 +314,7 @@ export function ModelRowInput({
             void editor.flush().catch(() => undefined);
           }}
           modelIdReadOnly={model.builtin}
+          providerId={providerId}
         />
         {onDelete ? (
           <Button

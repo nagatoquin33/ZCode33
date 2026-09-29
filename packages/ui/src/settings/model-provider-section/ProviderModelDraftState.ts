@@ -9,6 +9,7 @@ const CONFIG_VALUE_FIELDS = [
   "supportsJsonSchemaOutputValue",
   "supportsNativeWebSearchValue",
   "supportsMidConversationSystemValue",
+  "supportsToolCallValue",
   "reasoningLevelValuesValue",
 ] as const;
 

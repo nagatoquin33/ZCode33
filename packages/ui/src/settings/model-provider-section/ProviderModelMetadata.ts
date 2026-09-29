@@ -24,6 +24,7 @@ export interface ProviderModelDraftValues {
   supportsJsonSchemaOutputValue?: boolean;
   supportsNativeWebSearchValue?: boolean;
   supportsMidConversationSystemValue?: boolean;
+  supportsToolCallValue?: boolean;
   reasoningLevelValuesValue: readonly string[];
   reasoningLevelMapValue: string;
 }
@@ -72,6 +73,7 @@ export function createProviderModelDraftValues(
     supportsJsonSchemaOutputValue: properties.supportsJsonSchemaOutput ?? false,
     supportsNativeWebSearchValue: properties.supportsNativeWebSearch ?? false,
     supportsMidConversationSystemValue: properties.supportsMidConversationSystem ?? false,
+    supportsToolCallValue: properties.supportsToolCall ?? true,
     reasoningLevelValuesValue: [...(model.config.optionSpecs?.reasoningLevel?.values ?? [])],
     reasoningLevelMapValue:
       typeof model.personalConfig.optionSpecs?.reasoningLevel?.map === "string"
@@ -86,6 +88,7 @@ function personalDraftFieldKeys(config: ModelConfigObject): string[] {
     "supportsJsonSchemaOutput",
     "supportsNativeWebSearch",
     "supportsMidConversationSystem",
+    "supportsToolCall",
   ] as const) {
     if (config.properties?.[key] != null) result.push(`${key}Value`);
   }
@@ -178,7 +181,8 @@ export function resolveProviderModelDraftCommit({
       supportsPdf: draft.inputFormatValue.supportsPdf,
     },
     outputFormat: currentModel.config.properties?.outputFormat,
-    supportsToolCall: currentModel.config.properties?.supportsToolCall,
+    supportsToolCall:
+      draft.supportsToolCallValue ?? currentModel.config.properties?.supportsToolCall ?? true,
     supportsJsonSchemaOutput:
       draft.supportsJsonSchemaOutputValue ??
       currentModel.config.properties?.supportsJsonSchemaOutput ??
@@ -206,6 +210,7 @@ export function resolveProviderModelDraftCommit({
     "supportsJsonSchemaOutput",
     "supportsNativeWebSearch",
     "supportsMidConversationSystem",
+    "supportsToolCall",
   ] as const) {
     if (draft.overriddenFieldsValue?.includes(`${key}Value`))
       assignMutable(personalProperties, key, effectiveProperties[key]);
@@ -377,6 +382,7 @@ function buildPersonalProperties({
     "supportsJsonSchemaOutput",
     "supportsNativeWebSearch",
     "supportsMidConversationSystem",
+    "supportsToolCall",
   ] as const) {
     applyInteractiveSparseLeaf(
       result,

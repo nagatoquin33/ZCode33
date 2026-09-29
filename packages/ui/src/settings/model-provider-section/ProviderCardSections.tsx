@@ -561,6 +561,7 @@ export function ProviderModelsSection({
           }}
           mode="add"
           open={addDialogOpen}
+          providerId={providerId}
           draft={addDraft}
           draftErrorMessage={addCommitError ?? addDraftErrorMessage}
           draftErrorField={addDraftErrorField}

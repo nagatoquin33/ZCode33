@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input.js";
 import { useZCodeIntl } from "@/i18n/IntlProvider.js";
 import type { ModelConfigObject } from "@zcode/provider";
+import type { UpstreamModelSummary } from "@zcode/shared";
 import type {
   ProviderModelDraftValues,
   ProviderModelDraftCommitResult,
@@ -22,6 +23,7 @@ import {
   ModelSettingsGroup,
   ProviderModelReasoningSettings,
 } from "@/settings/model-provider-section/ProviderModelSettingsGroups.js";
+import { UpstreamModelPicker } from "@/settings/model-provider-section/UpstreamModelPicker.js";
 import { isImeComposingKeyEvent } from "@/lib/imeComposition.js";
 import { TECHNICAL_INPUT_ATTRIBUTES } from "@/lib/technicalInputAttributes.js";
 import {
@@ -43,6 +45,21 @@ function selectFocusedInputText(event: Pick<FocusEvent<HTMLInputElement>, "curre
   event.currentTarget.select();
 }
 
+/** 上游声明的输入模态映射进草稿；text 恒开（提交校验要求至少文本输入）。 */
+function projectUpstreamModalities(
+  modalities: readonly string[],
+  fallback: ProviderModelDraftValues["inputFormatValue"],
+): ProviderModelDraftValues["inputFormatValue"] {
+  const supports = (kind: string) => modalities.includes(kind);
+  return {
+    supportsText: fallback.supportsText ?? true,
+    supportsImage: supports("image"),
+    supportsVideo: supports("video"),
+    supportsAudio: supports("audio"),
+    supportsPdf: supports("pdf"),
+  };
+}
+
 export function ProviderModelMetadataDialog({
   mode = "edit",
   open,
@@ -61,6 +78,7 @@ export function ProviderModelMetadataDialog({
   saving = false,
   modelDefaultsLoaded = false,
   onModelIdBlur,
+  providerId,
 }: {
   mode?: "add" | "edit";
   open: boolean;
@@ -79,6 +97,7 @@ export function ProviderModelMetadataDialog({
   saving?: boolean;
   modelDefaultsLoaded?: boolean;
   onModelIdBlur?: () => void;
+  providerId?: string;
 }) {
   const { intl } = useZCodeIntl();
   const [validationAttempt, setValidationAttempt] = useState(0);
@@ -125,6 +144,20 @@ export function ProviderModelMetadataDialog({
     compositionActiveRef.current = false;
   };
   const maxOutputTokensInputDisabled = mode === "add" && !draft.idValue.trim();
+  const applyUpstreamModel = (model: UpstreamModelSummary) => {
+    onDraftChange({
+      idValue: model.id,
+      ...(model.contextWindow != null ? { contextWindowValue: String(model.contextWindow) } : {}),
+      ...(model.inputModalities
+        ? {
+            inputFormatValue: projectUpstreamModalities(
+              model.inputModalities,
+              draft.inputFormatValue,
+            ),
+          }
+        : {}),
+    });
+  };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {mode === "edit" ? (
@@ -197,6 +230,15 @@ export function ProviderModelMetadataDialog({
                   onCompositionEnd={handleCompositionEnd}
                   onKeyDown={handleTechnicalInputKeyDown}
                 />
+                {providerId && !modelIdReadOnly ? (
+                  <div className="mt-2">
+                    <UpstreamModelPicker
+                      providerId={providerId}
+                      disabled={saving}
+                      onModelSelected={applyUpstreamModel}
+                    />
+                  </div>
+                ) : null}
               </div>
             </div>
           </ModelSettingsGroup>
@@ -332,6 +374,7 @@ export function ProviderModelMetadataDialog({
                 <div className="flex flex-wrap gap-2" data-model-capabilities-options="true">
                   {(
                     [
+                      "supportsToolCall",
                       "supportsJsonSchemaOutput",
                       "supportsNativeWebSearch",
                       "supportsMidConversationSystem",
@@ -352,6 +395,11 @@ export function ProviderModelMetadataDialog({
                     );
                   })}
                 </div>
+                {draft.supportsToolCallValue === false ? (
+                  <p className="text-ui-sm text-foreground-subtlest" role="note">
+                    {intl.formatMessage({ id: "settings.modelProvider.supportsToolCallWarning" })}
+                  </p>
+                ) : null}
               </div>
             </ModelSettingsGroup>
             <ProviderModelReasoningSettings

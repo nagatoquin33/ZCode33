@@ -79,3 +79,26 @@ export type ModelConnectivityResult =
         readonly code?: "provider-unavailable" | "model-unavailable";
       };
     };
+
+/** 上游 /v1/models 目录条目：只保留设置表单能消费的字段，未知字段一律丢弃。 */
+export interface UpstreamModelSummary {
+  readonly id: string;
+  readonly displayName?: string;
+  readonly contextWindow?: number;
+  readonly inputModalities?: readonly string[];
+}
+
+/** 设置页从上游供应商拉取模型目录的结果。 */
+export type UpstreamModelCatalogResult =
+  | { readonly success: true; readonly models: readonly UpstreamModelSummary[] }
+  | {
+      readonly success: false;
+      readonly error: {
+        readonly message: string;
+        readonly code?:
+          | "provider-missing"
+          | "unsupported-access"
+          | "api-not-configured"
+          | "upstream-error";
+      };
+    };

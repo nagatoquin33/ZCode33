@@ -69,3 +69,24 @@ packages/desktop/.e2e-artifacts/
 packages/desktop/.e2e-cache/
 packages/desktop/.e2e-network-capture/
 .zcode-runtime/
+
+# ─── 闭源逆向隔离护栏（勿删）────────────────────────────────────────
+# 逆向 ZCode 闭源 Computer Use 的工件与笔记统一存放在仓库外的
+# D:/ai/zcode-cua-re/（永不入库）。下列模式防止任何闭源衍生内容被意外
+# 提交进开源 fork——包括从生产版插件缓存/Helper bundle 拷贝的任何文件、
+# 逆向笔记、以及会话导出。
+/artifacts/
+/research/
+/reverse-engineering/
+/vendor-closed/
+/cua-re/
+/zcode-cua-re/
+*-closed/
+*reverse*.md
+*reverse*.ts
+*reverse*.js
+# 闭源产物特征名（cache 目录里的 plugin 版本目录、Helper 部署结构）
+packages/zcode-cua-plugin/artifacts/
+packages/zcode-cua/artifacts/
+**/windows-helper.js
+**/ax_native.node

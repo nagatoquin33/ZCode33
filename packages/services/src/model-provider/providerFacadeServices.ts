@@ -17,8 +17,9 @@ import {
   type SavePersonalModelDraftInput,
 } from "@zcode/provider";
 import { createServiceDescriptor } from "../descriptors.js";
-import type { ModelConnectivityResult } from "@zcode/shared";
+import type { ModelConnectivityResult, UpstreamModelCatalogResult } from "@zcode/shared";
 import { createServiceLogger } from "../logger/serviceLogger.js";
+import { createProviderSettingsUpstreamModelFetcher } from "./upstreamModelCatalog.js";
 
 export type {
   ProviderSettingsProviderView,
@@ -68,6 +69,8 @@ export interface IProviderSettingsService {
   testModelConnectivity(
     input: ProviderSettingsConnectivityRequest,
   ): Promise<ModelConnectivityResult>;
+  /** 从 Provider 上游 `GET /v1/models` 拉取模型目录，供添加模型弹窗做候选。 */
+  fetchUpstreamModels(providerId: ProviderId): Promise<UpstreamModelCatalogResult>;
 }
 
 export const IProviderSettingsService = createServiceDescriptor<IProviderSettingsService>(
@@ -110,7 +113,9 @@ export function createProviderSettingsService(
   facade: ProviderSettingsFacade,
   ensureReady: () => Promise<void> = async () => {},
   testConnectivity?: ProviderSettingsConnectivityTester,
+  fetchUpstreamDeps?: { readonly fetchImpl?: typeof fetch; readonly timeoutMs?: number },
 ): IProviderSettingsService {
+  const fetchUpstreamModels = createProviderSettingsUpstreamModelFetcher(facade, fetchUpstreamDeps);
   return {
     onDidChange: toEvent((listener) => facade.onDidChange(listener)),
     getView: async () => {
@@ -205,6 +210,10 @@ export function createProviderSettingsService(
         providerId: input.providerId,
         modelId: input.modelId,
       });
+    },
+    fetchUpstreamModels: async (providerId) => {
+      await ensureReady();
+      return await fetchUpstreamModels(providerId);
     },
   };
 }
